@@ -32,13 +32,7 @@
 		}
 			
 		sampler2D _MainTex;
-
-		sampler2D _DepthTex;
 		float _BurrarStlength;
-		float _DepthBorder;
-		int _ReverseFlag;
-		int _UseDepth;
-		int _DepthFluctuation;
 
 		float Gauss(int no)
 		{
@@ -51,7 +45,6 @@
 			return float2(x/_ScreenParams.x, y/_ScreenParams.y);
 		}
 
-		//
 		fixed4 GaussX(v2f i, float total)
 		{
 			fixed4 col = tex2D(_MainTex, i.uv + PxToUV(0, 0))*(Gauss(0)/total);
@@ -110,25 +103,11 @@
 
 		fixed4 Burrar(v2f i, bool is_X)
 		{
-			float depth = 1;
 			fixed4 orijin = tex2D(_MainTex, i.uv);
+
+			if(_BurrarStlength == 0)
+				return orijin;
 			
-			if(_UseDepth == 1)
-			{
-				fixed4 depth_col = tex2D(_DepthTex, i.uv);
-
-				if(depth_col.r > 1 - _DepthBorder)
-					return orijin;
-
-				if(_DepthFluctuation == 1)
-				{
-					if(_ReverseFlag == 0)
-						depth = smoothstep(0, 1, depth_col.r/_DepthBorder);
-					else
-						depth = smoothstep(0, 1, 1 - depth_col.r/_DepthBorder);
-				}
-			}
-
 			float total = 0;
 			for(float j = 0; j < 10; j++)
 			{
@@ -145,7 +124,7 @@
 			else
 				col = GaussY(i, total);
 			
-			return col*depth + (1 - depth)*orijin;
+			return col;
 		}
 
 		fixed4 fragH (v2f i) : SV_Target
